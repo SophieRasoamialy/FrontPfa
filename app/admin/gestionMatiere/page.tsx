@@ -143,7 +143,7 @@ const ListMatiere: React.FC = () => {
             <input type="text" id="table-search-users" className="block p-2 pl-10 text-sm text-gray-900 border border-gray-300 rounded-lg w-80 bg-gray-50 focus:ring-blue-500 focus:border-blue-500" placeholder="Chercher ..."/>
           </div>
         </div>
-        <button onClick={openModal} type="button" className=" flex text-gray-900 bg-gradient-to-r from-teal-300 to-lime-300 hover:bg-gradient-to-l hover:from-teal-200 hover:to-lime-300 focus:ring-4 focus:outline-none focus:ring-lime-300 font-medium rounded-lg text-sm px-5 py-2.5 float-right">
+        <button onClick={openModal} type="button" className=" m-2 flex text-gray-900 bg-gradient-to-r from-teal-300 to-lime-300 hover:bg-gradient-to-l hover:from-teal-200 hover:to-lime-300 focus:ring-4 focus:outline-none focus:ring-lime-300 font-medium rounded-lg text-sm px-5 py-2.5 float-right">
             <PlusIcon className='w-5 h-5'/>Nouveau
         </button> 
         <AjoutModal isOpen={isModalOpen} onClose={closeModal} />

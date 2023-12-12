@@ -152,7 +152,7 @@ const ListEtudiant: React.FC = () => {
             <input type="text" id="table-search-users" className="block p-2 pl-10 text-sm text-gray-900 border border-gray-300 rounded-lg w-80 bg-gray-50 focus:ring-blue-500 focus:border-blue-500" placeholder="Chercher des etudiants" />
           </div>
         </div>
-        <button onClick={openAjoutModal} type="button" className=" flex text-gray-900 bg-gradient-to-r from-teal-300 to-lime-300 hover:bg-gradient-to-l hover:from-teal-200 hover:to-lime-300 focus:ring-4 focus:outline-none focus:ring-lime-300 font-medium rounded-lg text-sm px-5 py-2.5 float-right">
+        <button onClick={openAjoutModal} type="button" className=" flex text-gray-900 bg-gradient-to-r from-teal-300 to-lime-300 hover:bg-gradient-to-l hover:from-teal-200 hover:to-lime-300 focus:ring-4 focus:outline-none focus:ring-lime-300 font-medium rounded-lg text-sm px-5 py-2.5 m-2 float-right">
             <PlusIcon className='w-5 h-5'/>Nouveau
         </button> 
         <AjoutModal isOpen={isAjoutModalOpen} onClose={closeAjoutModal} />
@@ -188,10 +188,10 @@ const ListEtudiant: React.FC = () => {
                     
                 </td>
                 <td className="flex items-center px-6 py-4 text-gray-900 whitespace-nowrap">
-                    <img className="w-10 h-10 rounded-full" src="https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=634&q=80" alt="Jese image"/>
+                    <img className="w-10 h-10 rounded-full" src={`/${etudiant.photo_etudiant}`} alt="photo" />
                     <div className="pl-3">
                     <div className="text-base font-semibold">{etudiant.nom_etudiant}</div>
-                    <div className="text-base font-semibold">{etudiant.prenom_etudiant}</div>
+                    <div className="text-base font-semibold">{etudiant.prenom_etudiant} </div>
                     </div>
                 </td>
                 <td className="px-6 py-4 text-center">

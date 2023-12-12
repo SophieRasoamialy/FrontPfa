@@ -14,6 +14,64 @@ export default function EdtPage() {
     const [selectedNiveau, setSelectedNiveau] = useState('none');
     const [edts, setEdts] = useState([]);
     const [edtId, setEdtId] = useState(0);
+    const niveaulbl =[
+      {
+          "id_niveau": 1,
+          "niveau": "L1 PRO"
+      },
+      {
+          "id_niveau": 2,
+          "niveau": "L1 IG"
+      },
+      {
+          "id_niveau": 3,
+          "niveau": "L2 GB"
+      },
+      {
+          "id_niveau": 4,
+          "niveau": "L2 SR"
+      },
+      {
+          "id_niveau": 5,
+          "niveau": "L2 IG"
+      },
+      {
+          "id_niveau": 6,
+          "niveau": "L3 GB"
+      },
+      {
+          "id_niveau": 7,
+          "niveau": "L3 SR"
+      },
+      {
+          "id_niveau": 8,
+          "niveau": "L3 IG"
+      },
+      {
+          "id_niveau": 9,
+          "niveau": "M1 GB"
+      },
+      {
+          "id_niveau": 10,
+          "niveau": "M1 SR"
+      },
+      {
+          "id_niveau": 11,
+          "niveau": "M1 IG"
+      },
+      {
+          "id_niveau": 12,
+          "niveau": "M2 GB"
+      },
+      {
+          "id_niveau": 13,
+          "niveau": "M2 SR"
+      },
+      {
+          "id_niveau": 14,
+          "niveau": "M2 IG"
+      }
+  ]
     
     const dateSelectionnee =new Date();
     const [currentDate, setCurrentDate] = useState(dateSelectionnee);
@@ -51,6 +109,8 @@ export default function EdtPage() {
     getEdt(selectedValue, startOfWeekDate, endOfWeekDate);
   }
 };
+// Recherche du niveau correspondant à l'id sélectionné
+const niveauSelectionne = niveaulbl.find((niveau) => niveau.id_niveau === parseInt(selectedNiveau, 10));
 
 
   const getEdt = async(niveau: string, date1: Date, date2: Date) => {
@@ -189,7 +249,7 @@ export default function EdtPage() {
     return(
       <div className='w-full'>
        
-        <div className=" w-full flex mb-5">
+        <div className=" w-full  mb-5">
             
         <select
             id="niveaux"
@@ -204,12 +264,17 @@ export default function EdtPage() {
               </option>
             ))}
           </select>
-            <div className="w-2/3 mx-auto font-bold">
-                <h3>Emploie du temps pour M1 </h3>
+          <br/>
+            <div className="w-2/3 mx-auto text-center font-bold">
+            {selectedNiveau !== 'none' ? (
+              <h3>Emploi du temps pour {niveauSelectionne.niveau}</h3>
+            ) : (
+              <h3>Sélectionnez un niveau pour afficher l'emploi du temps</h3>
+            )}
             </div>
 
           </div>
-          <button onClick={openModal} type="button" className=" flex text-gray-900 bg-gradient-to-r from-teal-300 to-lime-300 hover:bg-gradient-to-l hover:from-teal-200 hover:to-lime-300 focus:ring-4 focus:outline-none focus:ring-lime-300 font-medium rounded-lg text-sm px-5 py-2.5 float-right">
+          <button onClick={openModal} type="button" className=" flex items-center mx-auto justify-center text-center text-gray-900 bg-gradient-to-r from-teal-300 to-lime-300 hover:bg-gradient-to-l hover:from-teal-200 hover:to-lime-300 focus:ring-4 focus:outline-none focus:ring-lime-300 font-medium rounded-lg text-sm px-5 mb-3 py-2.5 ">
             <PlusIcon className='w-5 h-5'/>Ajouter
         </button> 
         <AjoutModal isOpen={isModalOpen} onClose={closeModal} />
@@ -255,7 +320,7 @@ export default function EdtPage() {
                 '10:30 - 12:00',
                 '13:00 - 14:30',
                 '14:30 - 16:00',
-                '17:30 - 19:00',
+                '16:00 - 17:30',
               ].map((hourRange, index) => (
                 <React.Fragment key={index}>
                   <tr className="text-center h-20">

@@ -11,15 +11,19 @@
   "dependencies": {
     "@heroicons/react": "^2.0.18",
     "axios": "^1.6.0",
+    "canvas": "^2.11.2",
     "chart.js": "^4.4.0",
     "chartjs-plugin-datalabels": "^2.2.0",
     "date-fns": "^2.30.0",
+    "encoding": "^0.1.13",
+    "face-api.js": "^0.22.2",
     "next": "14.0.0",
     "react": "^18.2.0",
     "react-dom": "^18",
     "react-lottie": "^1.2.3",
     "react-router-dom": "^6.18.0",
     "react-tabs": "^6.0.2",
+    "react-webcam": "^7.2.0",
     "sweetalert2": "^11.9.0"
   },
   "devDependencies": {
@@ -27,6 +31,7 @@
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "@types/react-lottie": "^1.2.8",
+    "@types/react-webcam": "^3.0.0",
     "autoprefixer": "^10",
     "eslint": "^8",
     "eslint-config-next": "14.0.0",

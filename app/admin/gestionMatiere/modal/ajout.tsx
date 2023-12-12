@@ -136,11 +136,11 @@ interface ModalProps {
             </div>
           </form>
            </div>
-          <div className='flex'>
-              <button onClick={onClose} className="mt-4 bg-red-500 text-white px-4 py-2 rounded-lg">
+          <div className='flex mt-4 gap-3'>
+              <button onClick={onClose} className="font-medium text-sm bg-red-500 text-white px-4 py-2 rounded-lg">
                 Close
               </button>
-              <button onClick={handleEnregistrer} type="button" className=" flex text-gray-900 bg-gradient-to-r from-teal-300 to-lime-300 hover:bg-gradient-to-l hover:from-teal-200 hover:to-lime-300 focus:ring-4 focus:outline-none focus:ring-lime-300 font-medium rounded-lg text-sm px-5 py-2.5 float-right">
+              <button onClick={handleEnregistrer} type="button" className=" flex text-gray-900 bg-gradient-to-r from-teal-300 to-lime-300 hover:bg-gradient-to-l hover:from-teal-200 hover:to-lime-300 focus:ring-4 focus:outline-none focus:ring-lime-300 font-medium rounded-lg text-sm px-4 py-2 float-right">
                   Enregistrer
               </button> 
           </div>

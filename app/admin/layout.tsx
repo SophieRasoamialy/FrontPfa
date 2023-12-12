@@ -16,9 +16,7 @@ export default function AdminLayout({
     <section  >
         <div className='flex'>
             <aside className="flex flex-col sm:w-64 h-screen sticky px-4 py-8 overflow-y-auto bg-white bg-opacity-70  border-r-0 border-l">
-                <a href="#" className="mx-auto">
-                <img className="w-auto h-6 sm:h-7" src="https://merakiui.com/images/full-logo.svg" alt="" />
-                </a>
+                
 
                 <div className="flex flex-col justify-between flex-1 mt-6">
                 <nav>

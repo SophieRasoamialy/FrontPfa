@@ -222,7 +222,7 @@ interface ModalProps {
                   onChange={handleSalleChange}
                   value={salle}
                 >
-                  <option value="none">Choisir un niveau</option>
+                  <option value="none">Choisir un salle </option>
                   {listSalle.map((salle, index) => (
                     <option key={salle.num_salle} value={salle.num_salle}>
                       {salle.num_salle}
@@ -232,11 +232,11 @@ interface ModalProps {
             </div>
           </form>
            </div>
-          <div className='flex gap-3'>
-          <button onClick={onClose} className="mt-4 bg-red-500 text-white px-4 py-2 rounded-lg">
+          <div className='flex gap-3 mt-4'>
+          <button onClick={onClose} className="mt-4 bg-red-500 text-white px-4 py-2 rounded-lg font-medium text-sm">
             Close
           </button>
-          <button onClick={handleEnregistrer} type="button" className=" flex text-gray-900 bg-gradient-to-r from-teal-300 to-lime-300 hover:bg-gradient-to-l hover:from-teal-200 hover:to-lime-300 focus:ring-4 focus:outline-none focus:ring-lime-300 font-medium rounded-lg text-sm px-5 py-2.5 float-right">
+          <button onClick={handleEnregistrer} type="button" className=" flex text-gray-900 bg-gradient-to-r from-teal-300 to-lime-300 hover:bg-gradient-to-l hover:from-teal-200 hover:to-lime-300 focus:ring-4 focus:outline-none focus:ring-lime-300 font-medium rounded-lg text-sm px-4 py-2 float-right">
               Enregistrer
           </button> 
           </div>

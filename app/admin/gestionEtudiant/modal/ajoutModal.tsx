@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Swal from 'sweetalert2';
+import { Trykker } from 'next/font/google';
 interface ModalProps {
     isOpen: boolean;
     onClose: () => void;
@@ -12,15 +13,27 @@ interface ModalProps {
     const [lastName, setLastName] = useState('');
     const [niveaux, setNiveaux] = useState([]);
     const [selectedNiveau, setSelectedNiveau] = useState('none');
+    const [studentPhoto, setStudentPhoto] = useState<File | null>(null);
+
 
     // Fonction pour envoyer les données au backend
   const handleEnregistrer = async () => {
+   
     try {
-      const response = await axios.post('http://localhost:3001/api/etudiants', {
-        nom_etudiant:firstName,
-        prenom_etudiant:lastName,
-        id_niveau: selectedNiveau
-      });
+      const formData = new FormData();
+      formData.append('nom_etudiant', firstName);
+      formData.append('prenom_etudiant', lastName);
+      formData.append('id_niveau', selectedNiveau);
+
+      if (studentPhoto) { 
+        const fileName = `images/${studentPhoto.name}`;
+        await studentPhoto.save(`public/etudiant/${fileName}`);
+        formData.append('photo_etudiant', studentPhoto, fileName);
+        
+      }
+
+      const response = await axios.post('http://localhost:3001/api/etudiants', formData);
+
 
       if (response.status === 200) {
         // Gérer la réponse si nécessaire
@@ -98,6 +111,18 @@ interface ModalProps {
                 placeholder="Enter last name"
               />
             </div>
+            <div className="mb-4">
+              <label htmlFor="studentPhoto" className="block text-sm font-medium text-gray-900">
+                Photo d'étudiant
+              </label>
+              <input
+                type="file"
+                id="studentPhoto"
+                name="studentPhoto"
+                onChange={(e) => setStudentPhoto(e.target.files ? e.target.files[0] : null)}
+                className="block w-full p-2 border border-gray-300 rounded-lg"
+              />
+          </div>
             <div className='mb-4' >
               <select
               id="niveaux"
@@ -115,11 +140,11 @@ interface ModalProps {
             </div>
           </form>
           </div>
-          <div className='flex'>
-            <button onClick={onClose} className="mt-4 bg-red-500 text-white px-4 py-2 rounded-lg">
+          <div className='flex gap-2 mt-4'>
+            <button onClick={onClose} className="font-medium text-sm  bg-red-500 text-white px-4 py-2 rounded-lg">
               Close
             </button>
-            <button onClick={handleEnregistrer} type="button" className=" flex text-gray-900 bg-gradient-to-r from-teal-300 to-lime-300 hover:bg-gradient-to-l hover:from-teal-200 hover:to-lime-300 focus:ring-4 focus:outline-none focus:ring-lime-300 font-medium rounded-lg text-sm px-5 py-2.5 float-right">
+            <button onClick={handleEnregistrer} type="button" className=" flex text-gray-900 bg-gradient-to-r from-teal-300 to-lime-300 hover:bg-gradient-to-l hover:from-teal-200 hover:to-lime-300 focus:ring-4 focus:outline-none focus:ring-lime-300 font-medium rounded-lg text-sm px-4 py-2 float-right">
                 Enregistrer
             </button>
           </div>
