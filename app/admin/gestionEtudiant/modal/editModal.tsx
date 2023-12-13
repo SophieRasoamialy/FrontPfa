@@ -19,17 +19,25 @@ interface ModalProps {
     // Fonction pour envoyer les données au backend
   const handleEnregistrer = async () => {
     try {
-      const formData = new FormData();
+     /* const formData = new FormData();
       formData.append('nom_etudiant', firstName);
       formData.append('prenom_etudiant', lastName);
-      formData.append('id_niveau', selectedNiveau);
+      formData.append('id_niveau', selectedNiveau);*/
 
-      if (studentPhoto) {
-        const fileName = `images/${studentPhoto.name}`;
-        formData.append('photo_etudiant', studentPhoto, fileName);
+      let  fileName = ''
+      if (studentPhoto) { 
+
+         fileName = `images/${studentPhoto.name}`;
+       // formData.append('photo_etudiant', fileName);
+        
       }
-
-    const response = await axios.put(`http://localhost:3001/api/etudiants/${id_etudiant}`, formData);
+    const response = await axios.put(`http://localhost:3001/api/etudiants/${id_etudiant}`, 
+    {
+      nom_etudiant : firstName,
+      prenom_etudiant: lastName,
+      id_niveau  : selectedNiveau,
+      photo_etudiant: fileName,
+    });
 
 
       if (response.status === 200) {

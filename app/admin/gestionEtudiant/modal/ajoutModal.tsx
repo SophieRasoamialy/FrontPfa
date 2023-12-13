@@ -20,19 +20,24 @@ interface ModalProps {
   const handleEnregistrer = async () => {
    
     try {
-      const formData = new FormData();
+      /*const formData = new FormData();
       formData.append('nom_etudiant', firstName);
       formData.append('prenom_etudiant', lastName);
-      formData.append('id_niveau', selectedNiveau);
-
+      formData.append('id_niveau', selectedNiveau);*/
+      let  fileName = ''
       if (studentPhoto) { 
-        const fileName = `images/${studentPhoto.name}`;
-        await studentPhoto.save(`public/etudiant/${fileName}`);
-        formData.append('photo_etudiant', studentPhoto, fileName);
+
+         fileName = `images/${studentPhoto.name}`;
+       // formData.append('photo_etudiant', fileName);
         
       }
 
-      const response = await axios.post('http://localhost:3001/api/etudiants', formData);
+      const response = await axios.post('http://localhost:3001/api/etudiants', {
+        nom_etudiant : firstName,
+        prenom_etudiant: lastName,
+        id_niveau  : selectedNiveau,
+        photo_etudiant: fileName,
+      });
 
 
       if (response.status === 200) {

@@ -188,9 +188,9 @@ const ListEtudiant: React.FC = () => {
                     
                 </td>
                 <td className="flex items-center px-6 py-4 text-gray-900 whitespace-nowrap">
-                    <img className="w-10 h-10 rounded-full" src={`/${etudiant.photo_etudiant}`} alt="photo" />
+                    <img className="w-10 h-10 rounded-full" src={`/etudiant/${etudiant.photo_etudiant}`} alt="photo" />
                     <div className="pl-3">
-                    <div className="text-base font-semibold">{etudiant.nom_etudiant}</div>
+                    <div className="text-base font-semibold">{etudiant.nom_etudiant}  </div>
                     <div className="text-base font-semibold">{etudiant.prenom_etudiant} </div>
                     </div>
                 </td>

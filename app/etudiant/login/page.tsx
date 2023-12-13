@@ -46,7 +46,7 @@ export default function LoginPage() {
           
         };
       
-        fetchDataAndDraw();
+       // fetchDataAndDraw();
       }, []);
       
       
@@ -185,7 +185,6 @@ export default function LoginPage() {
     const compareFaces = async (): Promise<boolean> => {
       try {
         if (webcamRef.current) {
-          console.log("haha1");
           const imageSrc = webcamRef.current.getScreenshot();
           setCapturedImage(imageSrc);
 
@@ -203,39 +202,21 @@ export default function LoginPage() {
           }
 
           // Charger l'image existante à comparer
-          const image1 = await faceapi.fetchImage(photoPath).catch(error => console.error("Error loading image:", error));
-  
+          const image1 = await faceapi.fetchImage(photoPath)
           // Convertir l'image capturée en blob
-          console.log("haha2");
           const blob = await fetch(imageSrc).then((res) => res.blob());
-         // const blob1 = await fetch(photoPath).then((res) => res.blob());
-        //  const webpBlob = await convertJPEGtoWebP(blob1);
-          //console.log('webpBlob', webpBlob); 
-          //console.log("blob  ",blob);
-          //console.log("blob 1 ",blob1);
           const image2 = await faceapi.bufferToImage(blob);
-         // const image3 = await faceapi.bufferToImage(webpBlob);
-         // console.log("image2 ",image2);
-          //console.log("image3 ",image3);
-          // Charger le modèle de reconnaissance faciale
           await faceapi.nets.tinyFaceDetector.loadFromUri('/models');
           await faceapi.nets.faceLandmark68Net.loadFromUri('/models');
           await faceapi.nets.faceRecognitionNet.loadFromUri('/models');
           await faceapi.nets.ssdMobilenetv1.loadFromUri('/models');
 
-          console.log("haha5");
-
-         // const detectionsWithLandmarks1 = await faceapi.detectAllFaces(image1, new faceapi.SsdMobilenetv1Options()).withFaceLandmarks();
-
-          const detectionsWithLandmarks1 = await faceapi.detectAllFaces(image1, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks();
-          const detectionsWithLandmarks2 = await faceapi.detectAllFaces(image2, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks();
-          console.log("detectionsWithLandmarks1 =>>",detectionsWithLandmarks1);
-          console.log("detectionsWithLandmarks2 =>>", detectionsWithLandmarks2);
+         const face2 = await faceapi.detectSingleFace(image2).withFaceLandmarks().withFaceDescriptor();
+         const face1 = await faceapi.detectSingleFace(image1).withFaceLandmarks().withFaceDescriptor();
           
-           if (detectionsWithLandmarks1.length > 0 && detectionsWithLandmarks2.length > 0) {
-            // Comparer les descripteurs de visage
-            const distance = faceapi.euclideanDistance(detectionsWithLandmarks1[0].descriptor, detectionsWithLandmarks2[0].descriptor);
-    
+           // Comparer les descripteurs de visage
+            const distance = faceapi.euclideanDistance(face1!.descriptor, face2!.descriptor);
+
             if (distance < 0.6) {
               console.log("mitovy");
               // Les visages correspondent, rediriger vers une autre page
@@ -245,53 +226,16 @@ export default function LoginPage() {
               console.log("tsy mitovy");
               // Les visages ne correspondent pas, afficher un message d'erreur
               setError('Les visages ne correspondent pas.');
-              return false;
+              return false
             }
-          } else {
-            console.log("Aucun visage détecté dans l'une des images.");
-            setError('Aucun visage détecté dans l\'une des images.');
-            return false;
-          }
-        }
-      } catch (error) {
-        console.error('Erreur lors de la comparaison des visages:', error);
-      }
-    
-      return false;
-    };
-
-    async function convertJPEGtoWebP(jpegBlob:any) {
-      const jpegDataURL = await blobToDataURL(jpegBlob);
-      const img = new Image();
-      
-      return new Promise((resolve) => {
-        img.onload = () => {
-          const canvas = document.createElement('canvas');
-          canvas.width = img.width;
-          canvas.height = img.height;
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0, img.width, img.height);
-    
-          // Convertir l'image en WebP
-          canvas.toBlob((webpBlob) => {
-            resolve(webpBlob);
-          }, 'image/webp', 1);
-        };
-    
-        img.src = jpegDataURL;
-      });
-    }
-    
-    async function blobToDataURL(blob:any) {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result);
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
-      });
-    }
-    
-    
+                }
+              } catch (error) {
+                console.error('Erreur lors de la comparaison des visages:', error);
+                return false;
+              }
+            
+              return false;
+            };
     
   return (
     <div className='flex w-full'>

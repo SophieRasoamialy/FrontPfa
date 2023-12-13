@@ -28,9 +28,11 @@ const capture = useCallback(async () => {
     await faceapi.nets.faceRecognitionNet.loadFromUri('/models');
     await faceapi.nets.ssdMobilenetv1.loadFromUri('/models');
 
+   
+    
     // Détecter les visages dans les images
     const face2 = await faceapi.detectSingleFace(image2).withFaceLandmarks().withFaceDescriptor();
-    const face1 = await faceapi.detectSingleFace(image1, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
+    const face1 = await faceapi.detectSingleFace(image1).withFaceLandmarks().withFaceDescriptor();
     console.log("face2 =>> "+face2);
 console.log("face1 =>> "+face1);
 

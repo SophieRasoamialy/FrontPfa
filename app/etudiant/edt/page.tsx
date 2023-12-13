@@ -6,7 +6,7 @@ import Swal from 'sweetalert2';
 import { startOfWeek, endOfWeek, addDays, differenceInMinutes, parseISO, format  } from 'date-fns';
 import Webcam from 'react-webcam';
 import * as faceapi from 'face-api.js';
-
+import Modal from 'react-modal'; 
  
 
 interface EdtPageProps {
@@ -22,9 +22,33 @@ interface EdtPageProps {
     const [endOfWeekDate, setEndOfWeekDate] = useState(new Date());
     const webcamRef = useRef<Webcam>(null);
     const [capturedImage, setCapturedImage] = useState<string | null>(null);
+    const [isModalOpenEntree, setIsModalOpenEntree] = useState(false);
+    const [isModalOpenSortie, setIsModalOpenSortie] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [idEdt, setIdEdt] = useState(0);
+
+    const openModalEntree = (id_edt:number) => {
+      setIdEdt(id_edt);
+      setIsModalOpenEntree(true);
+    };
+  
+    const closeModalEntree = () => {
+      setIsModalOpenEntree(false);
+    };
+
+    const openModalSortie = (id_edt:number) => {
+      setIdEdt(id_edt);
+      setIsModalOpenSortie(true);
+    };
+  
+    const closeModalSortie = () => {
+      setIsModalOpenSortie(false);
+    };
  
     useEffect(() => {
+      
       if (currentDate) {
+
         const startOfWeekDate = startOfWeek(currentDate, { weekStartsOn: 1 }); // 1 pour lundi
         const endOfWeekDate = endOfWeek(currentDate, { weekStartsOn: 1 }); // 1 pour lundi
         fetchNiveaux(startOfWeekDate, endOfWeekDate);
@@ -64,7 +88,8 @@ interface EdtPageProps {
       }
     };
 
-    const handlePointageEntreeClick = async (id_edt: any) => {
+    const handlePointageEntreeClick = async () => {
+      setLoading(true);
       const maintenant = new Date();
       const pointage_entree = format(maintenant, "yyyy-MM-dd HH:mm:ss");
       const faceMatch = await compareFaces();
@@ -72,22 +97,37 @@ interface EdtPageProps {
       { 
         try {
           const response = await axios.post('http://localhost:3001/api/pointages', {
-            id_edt: id_edt,
+            id_edt: idEdt,
             id_etudiant: id,
-            pointage_entre : pointage_entree,
+            pointage_entre: pointage_entree,
           });
-          if (response.status === 200) {
+          if (response.status === 200 || response.status === 201) {
+            closeModalEntree();
+            setLoading(false);
+            setCapturedImage(null);
             Swal.fire('Succès', 'Merci de faire votre pointage.\n N\'oublier pas de faire le pointage avant de sortir apre le cours', 'success');
             getEdts(niveau, startOfWeekDate, endOfWeekDate);
           } else {
+            closeModalEntree();
+            setLoading(false);
+            setCapturedImage(null);
             Swal.fire('Erreur', 'Erreur lors de l\'enregistrement des données', 'error');
             
           }
           return response.data;
         } catch (error) {
+          closeModalEntree();
+          setLoading(false);
+          setCapturedImage(null);
           console.error('Erreur lors de la création ou de la mise à jour du pointage', error);
           throw error;
         }
+      }
+      else{
+        closeModalEntree();
+          setLoading(false);
+          setCapturedImage(null);
+          Swal.fire('Erreur', 'Erreur lors de la comparaison des visages', 'error');
       }
     }
 
@@ -100,7 +140,6 @@ interface EdtPageProps {
           try {
             const response = await fetch(`http://localhost:3001/api/etudiants/${id}/photo`);
             const data = await response.json();
-    
             if (response.ok) {
               photoPath = data.photoPath;
             } else {
@@ -109,59 +148,77 @@ interface EdtPageProps {
           } catch (error) {
             console.error('Erreur lors de la récupération du chemin de la photo de l\'étudiant', error);
           }
-          const image1 = await faceapi.fetchImage(photoPath);
-      
+
+          // Charger l'image existante à comparer
+          const image1 = await faceapi.fetchImage(photoPath)
+          console.log("photopath =>", photoPath)
+          // Convertir l'image capturée en blob
           const blob = await fetch(imageSrc).then((res) => res.blob());
           const image2 = await faceapi.bufferToImage(blob);
-      
           await faceapi.nets.tinyFaceDetector.loadFromUri('/models');
           await faceapi.nets.faceLandmark68Net.loadFromUri('/models');
           await faceapi.nets.faceRecognitionNet.loadFromUri('/models');
           await faceapi.nets.ssdMobilenetv1.loadFromUri('/models');
-      
-          const face1 = await faceapi.detectSingleFace(image1).withFaceLandmarks().withFaceDescriptor();
-          const face2 = await faceapi.detectSingleFace(image2).withFaceLandmarks().withFaceDescriptor();
-      
-          const distance = faceapi.euclideanDistance(face1!.descriptor, face2!.descriptor);
-          
-          if (distance < 0.6) {
-            setError(null);
-            return true;
-          } else {
-            setError('Les visages ne correspondent pas.');
-            return false
-          }
-        }
-    } catch (error) {
-      console.error('Erreur lors de la comparaison des visages:', error);
-    }
-  
-    return false;
-  };
 
-    const handlePointageSortieClick = async (id_edt: any) => {
+         const face2 = await faceapi.detectSingleFace(image2).withFaceLandmarks().withFaceDescriptor();
+         const face1 = await faceapi.detectSingleFace(image1).withFaceLandmarks().withFaceDescriptor();
+          console.log("face2 => ", face2);
+          console.log("face1 => ",face1);
+           // Comparer les descripteurs de visage
+            const distance = faceapi.euclideanDistance(face1!.descriptor, face2!.descriptor);
+
+            if (distance < 0.6) {
+              console.log("mitovy");
+              return true;
+            } else {
+              console.log("tsy mitovy");
+              return false
+            }
+                }
+              } catch (error) {
+                console.error('Erreur lors de la comparaison des visages:', error);
+                return false;
+              }
+            
+              return false;
+            };
+
+    const handlePointageSortieClick = async () => {
+      setLoading(true);
       const maintenant = new Date();
       // Formatez la date et l'heure actuelles
       const pointage_sortie = format(maintenant, "yyyy-MM-dd HH:mm:ss");
+      const faceMatch = await compareFaces();
+      if (faceMatch)
+      { 
       try {
         const response = await axios.put('http://localhost:3001/api/pointages', {
-          id_edt: id_edt,
+          id_edt: idEdt,
           id_etudiant: id,
           pointage_sortie: pointage_sortie,
         });
-        if (response.status === 200) {
-          // Gérer la réponse si nécessaire
+        if (response.status === 200 || response.status === 201){
+          closeModalSortie();
+          setLoading(false);
+          setCapturedImage(null);
           Swal.fire('Succès', 'Merci de faire votre pointage.', 'success');
           getEdts(niveau, startOfWeekDate, endOfWeekDate);
         } else {
+          closeModalSortie();
+          setLoading(false);
+          setCapturedImage(null);
           Swal.fire('Erreur', 'Erreur lors de l\'enregistrement des données', 'error');
           
         }
         return response.data;
       } catch (error) {
+        closeModalSortie();
+          setLoading(false);
+          setCapturedImage(null);
         console.error('Erreur lors de la création ou de la mise à jour du pointage', error);
         throw error;
       }
+    }
     }
  
 
@@ -354,7 +411,7 @@ return(
                                                   (
                                                     <div>
                                                       { edt.isEntranceOnly.entranceOnly ? (
-                                                      <button  type="button" onClick={()=>handlePointageSortieClick(edt.id_edt)} className=" items-center justify-center text-gray-900 bg-gradient-to-r from-teal-300 to-lime-300 hover:bg-gradient-to-l hover:from-teal-200 hover:to-lime-300 focus:ring-4 focus:outline-none focus:ring-lime-300  rounded-lg text-xs px-2 py-2 mx-auto ">
+                                                      <button  type="button" onClick={()=>openModalSortie(edt.id_edt)} className=" items-center justify-center text-gray-900 bg-gradient-to-r from-teal-300 to-lime-300 hover:bg-gradient-to-l hover:from-teal-200 hover:to-lime-300 focus:ring-4 focus:outline-none focus:ring-lime-300  rounded-lg text-xs px-2 py-2 mx-auto ">
                                                       Pointage(sortie)
                                                       </button>
                                                       ) : (
@@ -362,7 +419,7 @@ return(
                                                         { edt.isPresent.present ? (
                                                         <span className="text-green-500"> présent</span>
                                                         ) : (
-                                                          <button  type="button" onClick={()=>handlePointageEntreeClick(edt.id_edt)} className="  items-center justify-center text-gray-900 bg-gradient-to-r from-teal-300 to-lime-300 hover:bg-gradient-to-l hover:from-teal-200 hover:to-lime-300 focus:ring-4 focus:outline-none focus:ring-lime-300 rounded-lg text-xs px-2 py-2 mx-auto ">
+                                                          <button  type="button" onClick={()=>openModalEntree(edt.id_edt)} className="  items-center justify-center text-gray-900 bg-gradient-to-r from-teal-300 to-lime-300 hover:bg-gradient-to-l hover:from-teal-200 hover:to-lime-300 focus:ring-4 focus:outline-none focus:ring-lime-300 rounded-lg text-xs px-2 py-2 mx-auto ">
                                                           Pointage(entrée)
                                                           </button>
                                                         )}
@@ -391,7 +448,7 @@ return(
                                                 }
                                               </div>
                                             ) : (
-                                              <button  type="button" className=" opacity-50 items-center justify-center cursor-not-allowed flex text-gray-900 bg-gradient-to-r from-teal-300 to-lime-300 hover:bg-gradient-to-l hover:from-teal-200 hover:to-lime-300 focus:ring-4 focus:outline-none focus:ring-lime-300  rounded-lg text-xs px-2 py-2 mx-auto " disabled>
+                                              <button  type="button" className=" opacity-50 items-center justify-center  cursor-not-allowed  flex text-gray-900 bg-gradient-to-r from-teal-300 to-lime-300 hover:bg-gradient-to-l hover:from-teal-200 hover:to-lime-300 focus:ring-4 focus:outline-none focus:ring-lime-300  rounded-lg text-xs px-2 py-2 mx-auto " disabled>
                                                 Pointage(entrée)
                                               </button>
                                             ) }
@@ -427,6 +484,151 @@ return(
         </div>
         )}
     </div>
+
+    {/*modal 1*/}
+    <Modal
+  isOpen={isModalOpenEntree}
+  onRequestClose={closeModalEntree}
+  contentLabel="Reconnaissance faciale"
+  ariaHideApp={false}
+  style={{
+    overlay: {
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      zIndex: 1000,
+    },
+    content: {
+      top: '50%',
+      left: '50%',
+      right: 'auto',
+      bottom: 'auto',
+      marginRight: '-50%',
+      transform: 'translate(-50%, -50%)',
+      border: 'none',
+      borderRadius: '8px',
+      boxShadow: '0 2px 10px rgba(0, 0, 0, 0.2)',
+      padding: '20px',
+    },
+  }}
+>
+  <div className="flex w-full justify-end items-center ">
+    <button
+      onClick={closeModalEntree}
+      className="absolute top-0 right-0 cursor-pointer p-2 text-gray-900 bg-gradient-to-r from-teal-300 to-lime-300 hover:bg-gradient-to-l hover:from-teal-200 hover:to-lime-300 focus:ring-4 focus:outline-none focus:ring-lime-300 text-sm"
+    >
+      X
+    </button>
+    <div className="w-full max-w-sm bg-white bg-opacity-70 border border-gray-200 rounded-2xl shadow">
+      <div className="p-8 rounded-t-lg">
+        {capturedImage ? (
+          <img src={capturedImage} alt="Captured" className="w-full h-full object-cover" />
+        ) : (
+          <div className="relative w-full h-full">
+            <Webcam audio={false} ref={webcamRef} className="w-full h-full object-cover rounded-t-lg" />
+            <canvas id="faceCanvas" className="absolute top-0 left-0 w-full h-full" />
+          </div>
+        )}
+      </div>
+
+      <div className="px-5 pb-5">
+        <div className="text-center">
+          {loading ? (
+            <button
+              disabled
+              className="py-2.5 px-5 inline-flex font-medium opacity-50 items-center justify-center cursor-not-allowed text-gray-900 bg-gradient-to-r from-teal-300 to-lime-300 hover:bg-gradient-to-l hover:from-teal-200 hover:to-lime-300 focus:ring-4 focus:outline-none focus:ring-lime-300 rounded-lg text-sm mx-auto"
+            >
+               <svg aria-hidden="true" role="status" className="inline w-4 h-4 me-3 text-gray-200 animate-spin" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z" fill="currentColor"/>
+                    <path d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z" fill="#1C64F2"/>
+                  </svg>
+              Verification en cours...
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={handlePointageEntreeClick}
+              className="text-gray-900 bg-gradient-to-r from-teal-300 to-lime-300 hover:bg-gradient-to-l hover:from-teal-200 hover:to-lime-300 focus:ring-4 focus:outline-none focus:ring-lime-300 font-medium rounded-lg text-sm px-5 py-2.5"
+            >
+              Verifier
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  </div>
+</Modal>
+
+
+{/*modal 2 */}
+<Modal
+  isOpen={isModalOpenSortie}
+  onRequestClose={closeModalSortie}
+  contentLabel="Reconnaissance faciale"
+  ariaHideApp={false}
+  style={{
+    overlay: {
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      zIndex: 1000,
+    },
+    content: {
+      top: '50%',
+      left: '50%',
+      right: 'auto',
+      bottom: 'auto',
+      marginRight: '-50%',
+      transform: 'translate(-50%, -50%)',
+      border: 'none',
+      borderRadius: '8px',
+      boxShadow: '0 2px 10px rgba(0, 0, 0, 0.2)',
+      padding: '20px',
+    },
+  }}
+>
+  <div className="flex w-full justify-end items-center ">
+    <button
+      onClick={closeModalSortie}
+      className="absolute top-0 right-0 cursor-pointer p-2 text-gray-900 bg-gradient-to-r from-teal-300 to-lime-300 hover:bg-gradient-to-l hover:from-teal-200 hover:to-lime-300 focus:ring-4 focus:outline-none focus:ring-lime-300 text-sm"
+    >
+      X
+    </button>
+    <div className="w-full max-w-sm bg-white bg-opacity-70 border border-gray-200 rounded-2xl shadow">
+      <div className="p-8 rounded-t-lg">
+        {capturedImage ? (
+          <img src={capturedImage} alt="Captured" className="w-full h-full object-cover" />
+        ) : (
+          <div className="relative w-full h-full">
+            <Webcam audio={false} ref={webcamRef} className="w-full h-full object-cover rounded-t-lg" />
+            <canvas id="faceCanvas" className="absolute top-0 left-0 w-full h-full" />
+          </div>
+        )}
+      </div>
+
+      <div className="px-5 pb-5">
+        <div className="text-center">
+          {loading ? (
+            <button
+              disabled
+              className="py-2.5 px-5 inline-flex font-medium opacity-50 items-center justify-center cursor-not-allowed text-gray-900 bg-gradient-to-r from-teal-300 to-lime-300 hover:bg-gradient-to-l hover:from-teal-200 hover:to-lime-300 focus:ring-4 focus:outline-none focus:ring-lime-300 rounded-lg text-sm mx-auto"
+            >
+               <svg aria-hidden="true" role="status" className="inline w-4 h-4 me-3 text-gray-200 animate-spin" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z" fill="currentColor"/>
+                    <path d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z" fill="#1C64F2"/>
+                  </svg>
+              Verification en cours...
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={handlePointageSortieClick}
+              className="text-gray-900 bg-gradient-to-r from-teal-300 to-lime-300 hover:bg-gradient-to-l hover:from-teal-200 hover:to-lime-300 focus:ring-4 focus:outline-none focus:ring-lime-300 font-medium rounded-lg text-sm px-5 py-2.5"
+            >
+              Verifier
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  </div>
+</Modal>
   </div>
 );
 }
