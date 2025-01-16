@@ -1,21 +1,36 @@
  
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/20/solid";
+import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/solid";
 import Swal from 'sweetalert2';
 import { startOfWeek, endOfWeek, addDays, differenceInMinutes, parseISO, format  } from 'date-fns';
 import Webcam from 'react-webcam';
 import * as faceapi from 'face-api.js';
 import Modal from 'react-modal'; 
+import Image from 'next/image';
  
 
 interface EdtPageProps {
     id: string | undefined; // Ou le type approprié de votre ID
   }
+  interface Edt {
+    id_edt: number;
+    date: string;
+    heure: string;
+    matiere: string;
+    nom_enseignant: string;
+    prenom_enseignant: string;
+    num_salle: string;
+    isPresent: boolean;
+    present: boolean;
+    id_matiere: number;
+    id_niveau: number;
+  }
   
   const EdtPage: React.FC<EdtPageProps> = ({ id }) =>  {
-    const [edts, setEdts] = useState([]);
+    const [edts, setEdts] = useState<Edt[]>([]);
     const [niveau, setNiveau] = useState('');
+    const [niveaulbl, setNiveaulbl] = useState('');
     const dateSelectionnee =new Date();
     const [currentDate, setCurrentDate] = useState(dateSelectionnee);
     const [startOfWeekDate, setStartOfWeekDate] = useState(new Date());
@@ -64,8 +79,11 @@ interface EdtPageProps {
 
     const fetchNiveaux = async (date1: Date, date2: Date) => {
       try {
-        const response = await axios.get(`http://localhost:3001/api/etudiants/${id}`);
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_BACK_URL}/api/etudiants/${id}`);
         setNiveau(response.data.id_niveau);
+
+        const response2 = await axios.get(`${process.env.NEXT_PUBLIC_BACK_URL}/api/niveaux/${response.data.id_niveau}`);
+        setNiveaulbl(response2.data.niveau);
         getEdts(response.data.id_niveau, date1, date2);
       } catch (error) {
         console.error('Erreur lors de la récupération des niveaux', error);
@@ -76,7 +94,7 @@ interface EdtPageProps {
       try {
         const formattedDate1 = formatDate(date1);
         const formattedDate2 = formatDate(date2);
-        const response = await axios.get(`http://localhost:3001/api/edt/etudiant/${niveau}?date1=${formattedDate1}&date2=${formattedDate2}&id_etudiant=${id}`);
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_BACK_URL}/api/edt/etudiant/${niveau}?date1=${formattedDate1}&date2=${formattedDate2}&id_etudiant=${id}`);
 
         if (response.status === 200) {
           setEdts(response.data);
@@ -96,7 +114,7 @@ interface EdtPageProps {
       if (faceMatch)
       { 
         try {
-          const response = await axios.post('http://localhost:3001/api/pointages', {
+          const response = await axios.post(`${process.env.NEXT_PUBLIC_BACK_URL}/api/pointages`, {
             id_edt: idEdt,
             id_etudiant: id,
             pointage_entre: pointage_entree,
@@ -138,7 +156,7 @@ interface EdtPageProps {
           setCapturedImage(imageSrc);
           let photoPath = "";
           try {
-            const response = await fetch(`http://localhost:3001/api/etudiants/${id}/photo`);
+            const response = await fetch(`${process.env.NEXT_PUBLIC_BACK_URL}/api/etudiants/${id}/photo`);
             const data = await response.json();
             if (response.ok) {
               photoPath = data.photoPath;
@@ -192,7 +210,7 @@ interface EdtPageProps {
       if (faceMatch)
       { 
       try {
-        const response = await axios.put('http://localhost:3001/api/pointages', {
+        const response = await axios.put(`${process.env.NEXT_PUBLIC_BACK_URL}/api/pointages`, {
           id_edt: idEdt,
           id_etudiant: id,
           pointage_sortie: pointage_sortie,
@@ -318,14 +336,14 @@ interface EdtPageProps {
               }
             };
 return(
-  <div className='w-full'>
+  <div className='w-full bg-gradient-to-br from-teal-100 to-white p-5'>
       <div>
-        <h3 className='text-center m-5 font-bold text-base'>Emploie du temps M1 GB</h3>
+        <h3 className='text-center m-5 font-bold text-2xl text-teal-600'>Emploie du temps {niveaulbl}</h3>
     </div>
     <div className=" container mx-auto  w-5/6">
         <div className="wrapper bg-white bg-opacity-70 rounded-2xl shadow w-full">
             <div className="header flex justify-between border-b p-2">
-                <span className="text-lg font-bold text-teal-500">
+                <span className="text-lg font-bold text-teal-600">
                 Semaine du {debutSemaineFormat} - {finSemaineFormat}, {debutSemaine.getFullYear()}
                 </span>
                 <div className="buttons">
@@ -337,9 +355,9 @@ return(
                     </button>
                 </div>
             </div>
-            <table className="w-full">
+            <table className="w-full table-auto">
                <thead>
-                    <tr>
+                    <tr className="bg-teal-200">
                         {['Heure', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, index) => (
                         <th
                             key={index}
@@ -470,16 +488,16 @@ return(
     <div>
         {nearestClass && (
         <div className="max-w-sm p-6 mx-auto my-5 bg-white border bg-opacity-70 border-gray-200 rounded-3xl shadow hover:bg-gray-100">
-            <p className="font-normal text-gray-700">
+            <p className="font-normal text-gray-900">
                 Prochain cours dans : {nearestClass?.difference !== undefined ? (
-                <span className="text-lime-600">
+                <span className="text-gray-900 font-bold">
                 {days > 0 ? `${days} jour${days > 1 ? 's' : ''} ` : ''}
                 {hours > 0 ? `${hours} heure${hours > 1 ? 's' : ''} ` : ''}
                 {minutes > 0 ? `${minutes} minute${minutes > 1 ? 's' : ''}` : ''}
                 </span>
                 ) : 'N/A'} <br />
-                Cours : {nearestClass.edt.matiere !== undefined ? <span className="text-lime-600">{nearestClass.edt.matiere}</span> : 'N/A'}<br />
-                Prof : {nearestClass.edt.nom_enseignant !== undefined ? <span className="text-lime-600">{`${nearestClass.edt.nom_enseignant} ${nearestClass.edt.prenom_enseignant}`}</span> : 'N/A'}
+                Cours : {nearestClass.edt.matiere !== undefined ? <span className="text-gray-900 font-bold">{nearestClass.edt.matiere}</span> : 'N/A'}<br />
+                Prof : {nearestClass.edt.nom_enseignant !== undefined ? <span className="text-gray-900 font-bold">{`${nearestClass.edt.nom_enseignant} ${nearestClass.edt.prenom_enseignant}`}</span> : 'N/A'}
             </p>
         </div>
         )}
@@ -593,7 +611,7 @@ return(
     <div className="w-full max-w-sm bg-white bg-opacity-70 border border-gray-200 rounded-2xl shadow">
       <div className="p-8 rounded-t-lg">
         {capturedImage ? (
-          <img src={capturedImage} alt="Captured" className="w-full h-full object-cover" />
+          <Image src={capturedImage} alt="Captured" className="w-full h-full object-cover" />
         ) : (
           <div className="relative w-full h-full">
             <Webcam audio={false} ref={webcamRef} className="w-full h-full object-cover rounded-t-lg" />

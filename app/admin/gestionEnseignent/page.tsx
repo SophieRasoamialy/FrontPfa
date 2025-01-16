@@ -1,19 +1,25 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { PlusIcon, PencilSquareIcon, TrashIcon, ChevronDoubleLeftIcon, ChevronDoubleRightIcon } from '@heroicons/react/20/solid';
+import { PlusIcon, PencilIcon, TrashIcon, ChevronDoubleLeftIcon, ChevronDoubleRightIcon } from '@heroicons/react/solid';
 import AjoutModal from './modal/ajout';
 import EditModal from './modal/edit';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 
+interface Enseignant {
+    id_enseignant: number;
+    nom_enseignant: string;
+    prenom_enseignant: string;
+    matiere: string;
+}
 
 const ListProf: React.FC = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-    const [enseignants, setEnseignants] = useState([]);
+    const [enseignants, setEnseignants] = useState<Enseignant[]>([]);
     const [enseignantId, setEnseignantId] = useState(0);
     const [currentPage, setCurrentPage] = useState(1);
-    const [itemsPerPage] = useState(5);
+    const [itemsPerPage] = useState(10);
 
     useEffect(() => {
         fetchEnseignants(currentPage);
@@ -22,7 +28,7 @@ const ListProf: React.FC = () => {
     const fetchEnseignants = async (page: number) => {
       console.log('here');
       try {
-        const response = await axios.get(`http://localhost:3001/api/enseignants?page=${page}&limit=${itemsPerPage}`);
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_BACK_URL}/api/enseignants?page=${page}&limit=${itemsPerPage}`);
         if (response.status === 200) {
           setEnseignants(response.data);
         } else {
@@ -36,7 +42,7 @@ const ListProf: React.FC = () => {
     const refreshEnseignants = async () => {
       try {
         // Requête pour récupérer à nouveau les matières
-        const response = await fetch(`http://localhost:3001/api/enseignants`);
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BACK_URL}/api/enseignants`);
         if (response.ok) {
           const data = await response.json();
           setEnseignants(data);
@@ -61,7 +67,7 @@ const ListProf: React.FC = () => {
         if (result.isConfirmed) {
           try {
             
-            await axios.delete(`http://localhost:3001/api/enseignants/${id}`);
+            await axios.delete(`${process.env.NEXT_PUBLIC_BACK_URL}/api/enseignants/${id}`);
     
             refreshEnseignants();
           } catch (error) {
@@ -103,8 +109,6 @@ const ListProf: React.FC = () => {
     }
   };
   
-  
-
     return (
       <div className="relative mx-auto overflow-x-auto shadow-md sm:rounded-lg">
         <div className='bg-white '>
@@ -145,24 +149,23 @@ const ListProf: React.FC = () => {
             <tbody>
             {enseignants.map((enseignant) => (
                 <tr className="bg-white border-b hover:bg-gray-50" key={enseignant.id_enseignant}>
-                
                 <td className=" px-6 py-4">
                 {enseignant.nom_enseignant}  {enseignant.prenom_enseignant}
                 </td>
                 <td className="px-6 py-4">
                 {enseignant.matiere}
                 </td>
-                
+
                 <td className=" flex px-6 py-4 gap-2">
                     <a href="#" className="font-medium text-blue-600 hover:text-blue-800" 
                     onClick={() => openEditModal(enseignant.id_enseignant)}>
-                        <PencilSquareIcon className='w-5 h-5'/>
+                        <PencilIcon className='w-5 h-5'/>
                     </a>
                     <a href="#" className="font-medium text-red-600 hover:text-red-800" 
                     onClick={() => handleDeleteEnseignant(enseignant.id_enseignant)} >
                         <TrashIcon className='w-5 h-5'/>
                     </a>
-                
+
                 </td>
                 </tr>
                 ))}

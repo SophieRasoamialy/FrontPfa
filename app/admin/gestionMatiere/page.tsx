@@ -1,18 +1,29 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { PlusIcon, PencilSquareIcon, TrashIcon } from '@heroicons/react/20/solid';
+import { PlusIcon, PencilIcon, TrashIcon } from '@heroicons/react/solid';
 import AjoutModal from './modal/ajout';
 import EditModal from './modal/edit';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 
+interface Matiere {
+    id_matiere: number;
+    matiere: string;
+    nom_enseignant: string;
+    prenom_enseignant: string;
+}
+
+interface Niveau {
+    id_niveau: number;
+    niveau: string;
+}
 
 const ListMatiere: React.FC = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-    const [niveaux, setNiveaux] = useState([]);
+    const [niveaux, setNiveaux] = useState<Niveau[]>([]);
     const [selectedNiveau, setSelectedNiveau] = useState('none');
-    const [matieres, setMatieres] = useState([]);
+    const [matieres, setMatieres] = useState<Matiere[]>([]);
     const [matiereId, setMatiereId] = useState(0);
 
 
@@ -23,7 +34,7 @@ const ListMatiere: React.FC = () => {
 
   const fetchNiveaux = async () => {
     try {
-      const response = await axios.get('http://localhost:3001/api/niveaux');
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_BACK_URL}/api/niveaux`);
       console.log("Niveaux reçus :", response.data);
       setNiveaux(response.data);
       
@@ -39,7 +50,7 @@ const ListMatiere: React.FC = () => {
       setSelectedNiveau(selectedValue);
 
       try {
-        const response = await fetch(`http://localhost:3001/api/matieres/niveau/${selectedValue}`);
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BACK_URL}/api/matieres/niveau/${selectedValue}`);
         if (response.ok) {
           const data = await response.json();
           setMatieres(data);
@@ -55,7 +66,7 @@ const ListMatiere: React.FC = () => {
   const refreshMatieres = async () => {
     try {
       // Requête pour récupérer à nouveau les matières
-      const response = await fetch(`http://localhost:3001/api/matieres/niveau/${selectedNiveau}`);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACK_URL}/api/matieres/niveau/${selectedNiveau}`);
       if (response.ok) {
         const data = await response.json();
         setMatieres(data);
@@ -80,7 +91,7 @@ const ListMatiere: React.FC = () => {
       if (result.isConfirmed) {
         try {
           // Faites votre appel à l'API pour supprimer le matière avec l'ID
-          await axios.delete(`http://localhost:3001/api/matieres/${id}`);
+          await axios.delete(`${process.env.NEXT_PUBLIC_BACK_URL}/api/matieres/${id}`);
   
           // Rafraîchir la liste des matières après la suppression
           refreshMatieres();
@@ -178,7 +189,7 @@ const ListMatiere: React.FC = () => {
                 <td className=" flex px-6 py-4 gap-2">
                     <a href="#" className="font-medium text-blue-600 hover:text-blue-800" 
                     onClick={() => openEditModal(matiere.id_matiere)}>
-                        <PencilSquareIcon className='w-5 h-5'/>
+                        <PencilIcon className='w-5 h-5'/>
                     </a>
                     <a href="#" className="font-medium text-red-600 hover:text-red-800" 
                     onClick={() => handleDeleteMatiere(matiere.id_matiere)} >

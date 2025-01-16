@@ -1,9 +1,5 @@
-// pages/api/upload-image.js
-
-import fs from 'fs';
 import path from 'path';
 import { IncomingForm } from 'formidable';
-import { NextApiRequest, NextApiResponse } from 'next';
 
 export const config = {
   api: {

@@ -8,10 +8,16 @@ interface ModalProps {
     id_etudiant:number;
   }
   
+  interface Niveau {
+    id_niveau: number;
+    niveau: string;
+  }
+
+
   const EditModal: React.FC<ModalProps> = ({ isOpen, onClose, id_etudiant }) => {
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
-    const [niveaux, setNiveaux] = useState([]);
+    const [niveaux, setNiveaux] = useState<Niveau[]>([]);
     const [selectedNiveau, setSelectedNiveau] = useState('none');
     const [studentPhoto, setStudentPhoto] = useState<File | null>(null);
 
@@ -31,7 +37,7 @@ interface ModalProps {
        // formData.append('photo_etudiant', fileName);
         
       }
-    const response = await axios.put(`http://localhost:3001/api/etudiants/${id_etudiant}`, 
+    const response = await axios.put(`${process.env.NEXT_PUBLIC_BACK_URL}/api/etudiants/${id_etudiant}`, 
     {
       nom_etudiant : firstName,
       prenom_etudiant: lastName,
@@ -62,7 +68,7 @@ interface ModalProps {
       console.log(id_etudiant);
       if(id_etudiant !== 0){
           try {
-              const response = await axios.get(`http://localhost:3001/api/etudiants/${id_etudiant}`);
+              const response = await axios.get(`${process.env.NEXT_PUBLIC_BACK_URL}/api/etudiants/${id_etudiant}`);
         
               if (response.status === 200) {
                 const data = response.data;
@@ -80,7 +86,7 @@ interface ModalProps {
   
     const fetchNiveaux = async () => {
       try {
-        const response = await axios.get('http://localhost:3001/api/niveaux');
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_BACK_URL}/api/niveaux`);
         console.log("Niveaux reçus :", response.data);
         setNiveaux(response.data);
         
@@ -104,7 +110,7 @@ interface ModalProps {
   
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-        <div className="bg-white rounded-lg p-8">
+      <div className="bg-white rounded-lg p-6 w-full max-w-md sm:max-w-lg md:max-w-xl">
           <h3 className="text-2xl font-bold mb-4">Nouveau Etudiant</h3>
            <div>
            <form className=" rounded-lg ">

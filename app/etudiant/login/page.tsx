@@ -1,297 +1,378 @@
-'use client'
-import React, {useState, useRef, useEffect} from 'react';
-import { useRouter } from 'next/navigation'
-import Lottie from 'react-lottie';
+"use client";
+import React, { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import Lottie from "lottie-react";
 import animationData from "../../../public/lotties/facial.json";
-import Swal from 'sweetalert2';
-import axios from 'axios';
-import Webcam from 'react-webcam';
-import * as faceapi from 'face-api.js';
-import { Canvas } from 'canvas';
-
+import Swal from "sweetalert2";
+import axios from "axios";
+import Webcam from "react-webcam";
+import * as faceapi from "face-api.js";
+import Link from "next/link";
+import Image from "next/image";
 
 export default function LoginPage() {
   const router = useRouter();
-    const [etudiantId, setEtudiantId] = useState(0);
-    const webcamRef = useRef<Webcam>(null);
-    const [error, setError] = useState<string | null>(null);
-    const [loading, setLoading] = useState(false);
-    const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [etudiantId, setEtudiantId] = useState(0);
+  const webcamRef = useRef<Webcam>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [capturedImage, setCapturedImage] = useState<string | null>(null);
 
-    
-    const defaultOptions = {
-        loop: true,
-        autoplay: true,
-        animationData: animationData,
-        rendererSettings: {
-          preserveAspectRatio: 'xMidYMid slice'
+  useEffect(() => {
+    const fetchDataAndDraw = async () => {
+      console.log("Before webcam initialization");
+
+      setTimeout(async () => {
+        if (!webcamRef.current) {
+          console.log("Webcam not initialized");
+          return;
         }
-      };
+        const imageSrc = webcamRef.current.getScreenshot();
+        if (imageSrc) {
+          console.log("Screenshot captured successfully");
+          await drawFaceDetection();
+        } else {
+          console.log("Image source is null.");
+        }
+      }, 5000);
+    };
 
-      useEffect(() => {
-        const fetchDataAndDraw = async () => {
-          console.log("Before webcam initialization");
-          
-           // console.log("Webcam is active. Waiting before capturing screenshot.");
-            setTimeout(async () => {
-              const imageSrc = webcamRef.current.getScreenshot();
-              if (imageSrc) {
-                console.log("Screenshot captured successfully");
-                
-                await drawFaceDetection();
-              } else {
-                console.log("Image source is null.");
-              }
-            }, 5000);
-          
-        };
-      
-       // fetchDataAndDraw();
-      }, []);
-      
-      
-      
-      
-    
-      const handleEtudiantChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const value = event.target.value;
-        const etudiantId = value === '' ? 0 : parseInt(value, 10);
-        setEtudiantId(etudiantId);
-      };
-      
+    // fetchDataAndDraw();
+  }, []);
 
-    const handleVerification = async () => {
-      console.log("Tentative de vérification avec l'identifiant d'étudiant :", etudiantId);
+  const handleEtudiantChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value;
+    const etudiantId = value === "" ? 0 : parseInt(value, 10);
+    setEtudiantId(etudiantId);
+  };
 
-      try {
-        setLoading(true);
-        const response = await axios.get(`http://localhost:3001/api/etudiants/check/${etudiantId}`);
-        const data = response.data;
+  const handleVerification = async () => {
+    console.log(
+      "Tentative de vérification avec l'identifiant d'étudiant :",
+      etudiantId
+    );
 
-        if (response.status === 200 && data.exists) {
-          const faceMatch = await compareFaces();
-      
-          if (faceMatch) {
-            console.log("La vérification a réussi. Redirection en cours...");
-            router.push(`/etudiant/${etudiantId}`);
-          }
+    try {
+      setLoading(true);
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_BACK_URL}/api/etudiants/check/${etudiantId}`
+      );
+      const data = response.data;
 
-          else {
-            Swal.fire({
-              icon: 'error',
-              title: 'Erreur',
-              text: 'La vérification faciale a échoué. Veuillez réessayer.',
-            });
-            setLoading(false);
-            setCapturedImage(null);
-          }
-          
+      if (response.status === 200 && data.exists) {
+        const faceMatch = await compareFaces();
+
+        if (faceMatch) {
+          console.log("La vérification a réussi. Redirection en cours...");
+          router.push(`/etudiant/${etudiantId}`);
         } else {
           Swal.fire({
-            icon: 'error',
-            title: 'Erreur',
-            text: 'Numéro matricule introuvable',
+            icon: "error",
+            title: "Erreur",
+            text: "La vérification faciale a échoué. Veuillez réessayer.",
           });
           setLoading(false);
           setCapturedImage(null);
         }
-      } catch (error) {
-        console.error('Erreur lors de la vérification de l\'existence de l\'étudiant:', error);
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Erreur",
+          text: "Numéro matricule introuvable",
+        });
         setLoading(false);
         setCapturedImage(null);
       }
-    };  
+    } catch (error) {
+      console.error(
+        "Erreur lors de la vérification de l'existence de l'étudiant:",
+        error
+      );
+      setLoading(false);
+      setCapturedImage(null);
+    }
+   // router.push(`/etudiant/${etudiantId}`);
+  };
 
-    const drawFaceDetection = async () => {
-      try {
-        if (webcamRef.current) {
-          // Capture the screenshot with the specified quality
-          const imageSrc = webcamRef.current.getScreenshot({
-            quality: 0.9,
-          });
-    
-          // Load face detection and landmarks models
-          await faceapi.nets.tinyFaceDetector.loadFromUri('/models');
-          await faceapi.nets.faceLandmark68Net.loadFromUri('/models');
-    
-          // Fetch the image
-          const response = await fetch(imageSrc);
-    
-          if (!response.ok) {
-            throw new Error("Échec de la récupération de l'image");
-          }
-    
-          // Convert the image to blob
-          const blob = await response.blob();
-    
-          // Create an Image element and wait for it to load
-          const loadImage = () => {
-            return new Promise((resolve, reject) => {
-              const image = new Image();
-              image.onload = () => resolve(image);
-              image.onerror = reject;
-              image.src = URL.createObjectURL(blob);
-            });
-          };
-    
-          const image = await loadImage();
-    
-          // Detect faces and landmarks in the image
-          const detectionsWithLandmarks = await faceapi.detectAllFaces(image, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks();
-         
-          // Retrieve the canvas context
-          const canvas = document.getElementById('faceCanvas') as HTMLCanvasElement;
-          const context = canvas.getContext('2d');
-    
-          if (context) {
-            // Clear the previous content
-            context.clearRect(0, 0, canvas.width, canvas.height);
-    
-            // Draw a rectangle, key points, and an oval around each detected face
-            detectionsWithLandmarks.forEach((result) => {
-              const { detection, landmarks } = result;
-              const { x, y, width, height } = detection.box;
-    
-              // Draw rectangle around the face
-              context.strokeStyle = 'red';
-              context.lineWidth = 2;
-              context.strokeRect(x, y, width, height);
-    
-              // Draw key points on the face
-              landmarks.positions.forEach((point) => {
-                context.fillStyle = 'blue';
-                context.fillRect(point.x - 2, point.y - 2, 4, 4);
-              });
-    
-              // Draw oval around the face
-              const leftEye = landmarks.getLeftEye()[0];
-              const rightEye = landmarks.getRightEye()[3];
-              const middleX = (leftEye.x + rightEye.x) / 2;
-              const middleY = (leftEye.y + rightEye.y) / 2;
-    
-              context.beginPath();
-              context.ellipse(middleX, middleY, width / 2, height / 2, 0, 0, 2 * Math.PI);
-              context.strokeStyle = 'green';
-              context.lineWidth = 2;
-              context.stroke();
-            });
-          }
+  const drawFaceDetection = async () => {
+    try {
+      if (webcamRef.current) {
+        const imageSrc = webcamRef.current.getScreenshot();
+
+        if (!imageSrc) {
+          throw new Error("Impossible de capturer l'image");
         }
-      } catch (error) {
-        console.error('Erreur lors de la détection du visage:', error);
+
+        await faceapi.nets.tinyFaceDetector.loadFromUri("/models");
+        await faceapi.nets.faceLandmark68Net.loadFromUri("/models");
+
+        const response = await fetch(imageSrc);
+
+        if (!response.ok) {
+          throw new Error("Échec de la récupération de l'image");
+        }
+
+        const blob = await response.blob();
+
+        const loadImage = (blob: Blob): Promise<HTMLImageElement> => {
+          return new Promise<HTMLImageElement>((resolve, reject) => {
+            const image = new Image();
+            image.onload = () => resolve(image);
+            image.onerror = reject;
+            image.src = URL.createObjectURL(blob);
+          });
+        };
+
+        const image = await loadImage(blob);
+
+        const detectionsWithLandmarks = await faceapi
+          .detectAllFaces(image, new faceapi.TinyFaceDetectorOptions())
+          .withFaceLandmarks();
+
+        const canvas = document.getElementById(
+          "faceCanvas"
+        ) as HTMLCanvasElement;
+        const context = canvas.getContext("2d");
+
+        if (context) {
+          context.clearRect(0, 0, canvas.width, canvas.height);
+
+          detectionsWithLandmarks.forEach((result) => {
+            const { detection, landmarks } = result;
+            const { x, y, width, height } = detection.box;
+
+            context.strokeStyle = "red";
+            context.lineWidth = 2;
+            context.strokeRect(x, y, width, height);
+
+            landmarks.positions.forEach((point) => {
+              context.fillStyle = "blue";
+              context.fillRect(point.x - 2, point.y - 2, 4, 4);
+            });
+
+            const leftEye = landmarks.getLeftEye()[0];
+            const rightEye = landmarks.getRightEye()[3];
+            const middleX = (leftEye.x + rightEye.x) / 2;
+            const middleY = (leftEye.y + rightEye.y) / 2;
+
+            context.beginPath();
+            context.ellipse(
+              middleX,
+              middleY,
+              width / 2,
+              height / 2,
+              0,
+              0,
+              2 * Math.PI
+            );
+            context.strokeStyle = "green";
+            context.lineWidth = 2;
+            context.stroke();
+          });
+        }
       }
-    };
+    } catch (error) {
+      console.error("Erreur lors de la détection du visage:", error);
+    }
+  };
 
-    const compareFaces = async (): Promise<boolean> => {
-      try {
-        if (webcamRef.current) {
-          const imageSrc = webcamRef.current.getScreenshot();
-          setCapturedImage(imageSrc);
+  const compareFaces = async (): Promise<boolean> => {
+    try {
+      if (webcamRef.current) {
+        const imageSrc = webcamRef.current.getScreenshot();
+        setCapturedImage(imageSrc);
 
-          let photoPath = "";
-          try {
-            const response = await fetch(`http://localhost:3001/api/etudiants/${etudiantId}/photo`);
-            const data = await response.json();
-            if (response.ok) {
-              photoPath = data.photoPath;
-            } else {
-              console.error('Erreur lors de la récupération du chemin de la photo de l\'étudiant', data.message);
-            }
-          } catch (error) {
-            console.error('Erreur lors de la récupération du chemin de la photo de l\'étudiant', error);
+        let photoPath = "";
+        try {
+          const response = await fetch(
+            `${process.env.NEXT_PUBLIC_BACK_URL}/api/etudiants/${etudiantId}/photo`
+          );
+          const data = await response.json();
+          if (response.ok) {
+            photoPath = data.photoPath;
+          } else {
+            console.error(
+              "Erreur lors de la récupération du chemin de la photo de l'étudiant",
+              data.message
+            );
           }
+        } catch (error) {
+          console.error(
+            "Erreur lors de la récupération du chemin de la photo de l'étudiant",
+            error
+          );
+        }
 
-          // Charger l'image existante à comparer
-          const image1 = await faceapi.fetchImage(photoPath)
-          // Convertir l'image capturée en blob
-          const blob = await fetch(imageSrc).then((res) => res.blob());
-          const image2 = await faceapi.bufferToImage(blob);
-          await faceapi.nets.tinyFaceDetector.loadFromUri('/models');
-          await faceapi.nets.faceLandmark68Net.loadFromUri('/models');
-          await faceapi.nets.faceRecognitionNet.loadFromUri('/models');
-          await faceapi.nets.ssdMobilenetv1.loadFromUri('/models');
+        const image1 = await faceapi.fetchImage(photoPath);
+        if (!imageSrc) {
+          throw new Error("Impossible de capturer l'image");
+        }
+        const blob = await fetch(imageSrc as string).then((res) => res.blob());
+        const image2 = await faceapi.bufferToImage(blob);
+        await faceapi.nets.tinyFaceDetector.loadFromUri("/models");
+        await faceapi.nets.faceLandmark68Net.loadFromUri("/models");
+        await faceapi.nets.faceRecognitionNet.loadFromUri("/models");
+        await faceapi.nets.ssdMobilenetv1.loadFromUri("/models");
 
-         const face2 = await faceapi.detectSingleFace(image2).withFaceLandmarks().withFaceDescriptor();
-         const face1 = await faceapi.detectSingleFace(image1).withFaceLandmarks().withFaceDescriptor();
-          
-           // Comparer les descripteurs de visage
-            const distance = faceapi.euclideanDistance(face1!.descriptor, face2!.descriptor);
+        const face2 = await faceapi
+          .detectSingleFace(image2)
+          .withFaceLandmarks()
+          .withFaceDescriptor();
+        const face1 = await faceapi
+          .detectSingleFace(image1)
+          .withFaceLandmarks()
+          .withFaceDescriptor();
 
-            if (distance < 0.6) {
-              console.log("mitovy");
-              // Les visages correspondent, rediriger vers une autre page
-              setError(null);
-              return true;
-            } else {
-              console.log("tsy mitovy");
-              // Les visages ne correspondent pas, afficher un message d'erreur
-              setError('Les visages ne correspondent pas.');
-              return false
-            }
-                }
-              } catch (error) {
-                console.error('Erreur lors de la comparaison des visages:', error);
-                return false;
-              }
-            
-              return false;
-            };
-    
+        const distance = faceapi.euclideanDistance(
+          face1!.descriptor,
+          face2!.descriptor
+        );
+
+        if (distance < 0.6) {
+          console.log("mitovy");
+          setError(null);
+          return true;
+        } else {
+          console.log("tsy mitovy");
+          setError("Les visages ne correspondent pas.");
+          return false;
+        }
+      }
+    } catch (error) {
+      console.error("Erreur lors de la comparaison des visages:", error);
+      return false;
+    }
+
+    return false;
+  };
+
   return (
-    <div className='flex w-full'>
-      <div className="w-1/6"></div>
-      <div className='w-2/6 flex h-sceen justify-center items-center'>
-        <div className=''>
-         <Lottie options={defaultOptions} />
-        </div>
+    <div className="min-h-screen bg-gradient-to-br from-teal-100 to-white">
+      {/* Dashboard Button */}
+      <div className="absolute top-4 right-4">
+        <Link
+          href="/etudiant/dashboard"
+          className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-teal-300 to-lime-300 text-black rounded-lg shadow hover:bg-gradient-to-l hover:from-teal-400 hover:to-lime-400 transition-all duration-300"
+        >
+          <svg
+            className="w-5 h-5 mr-2"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M4 6h16M4 12h16M4 18h16"
+            />
+          </svg>
+          Dashboard
+        </Link>
       </div>
 
-      <div className="flex w-3/6 justify-end items-center h-screen">
-        <div className="w-full mr-20 max-w-sm bg-white bg-opacity-70 border border-gray-200 rounded-2xl shadow  ">
-          <div >
-            <span className="p-8 rounded-t-lg  w-full  " >
-              {capturedImage ? (
-                <img src={capturedImage} alt="Captured" className="w-full h-full object-cover" />
-              ) : (
-                <>
-              <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-                <Webcam audio={false} ref={webcamRef} className="w-full h-full object-cover rounded-t-lg" />
-                
-                {/* Ajouter la balise canvas pour le cadre de détection au-dessus de la webcam */}
-                <canvas id="faceCanvas" style={{ position: 'absolute', top: -105, left: -45, width: '100%', height: '100%' }} />
+      <div className="flex flex-col md:flex-row w-full p-4 md:p-8">
+        <div className="w-full md:w-1/6"></div>
+        <div className="w-full md:w-2/6 flex h-auto md:h-screen justify-center items-center">
+          <div className="w-full max-w-md">
+            <Lottie 
+              animationData={animationData}
+              loop={true}
+              autoplay={true}
+              className="w-full h-auto"
+            />
+          </div>
+        </div>
+
+        <div className="flex w-full md:w-3/6 justify-end items-center h-auto md:h-screen">
+          <div className="w-full max-w-sm bg-white border border-gray-200 rounded-2xl shadow-lg backdrop-blur-sm bg-opacity-80">
+            <div className="relative">
+              <div className="rounded-t-2xl overflow-hidden">
+                {capturedImage ? (
+                  <Image
+                    src={capturedImage}
+                    alt="Captured"
+                    width={500}
+                    height={300}
+                    className="w-full h-full object-cover"
+                    unoptimized
+                  />
+                ) : (
+                  <div className="relative w-full h-[300px] md:h-[400px]">
+                    <Webcam
+                      audio={false}
+                      ref={webcamRef}
+                      className="w-full h-full object-cover rounded-t-2xl"
+                      screenshotFormat="image/jpeg"
+                    />
+                    <canvas
+                      id="faceCanvas"
+                      className="absolute top-0 left-0 w-full h-full"
+                    />
+                  </div>
+                )}
               </div>
-            </>
-
-              )}
-            </span>
-          </div>
-
-          <div className="px-5 pb-5">
-            <div>
-              <label htmlFor="helper-text" className=" mb-2 text-sm font-medium text-gray-900">Entrer votre numéro matricule</label>
-              <input value={etudiantId} onChange={handleEtudiantChange} type="number" id="helper-text" aria-describedby="helper-text-explanation" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 mb-4" />
             </div>
 
-            <div className="text-center">
-              {loading ? (
-                <button disabled type="button" className="py-2.5 px-5 me-2  inline-flex font-medium opacity-50 items-center justify-center cursor-not-allowed  text-gray-900 bg-gradient-to-r from-teal-300 to-lime-300 hover:bg-gradient-to-l hover:from-teal-200 hover:to-lime-300 focus:ring-4 focus:outline-none focus:ring-lime-300  rounded-lg text-sm mx-auto">
-                  <svg aria-hidden="true" role="status" className="inline w-4 h-4 me-3 text-gray-200 animate-spin" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z" fill="currentColor"/>
-                    <path d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z" fill="#1C64F2"/>
-                  </svg>
-                  Verification en cours...
-                </button>
-              ) : (
-                <button type="button" onClick={handleVerification} className="text-gray-900 bg-gradient-to-r from-teal-300 to-lime-300 hover:bg-gradient-to-l hover:from-teal-200 hover:to-lime-300 focus:ring-4 focus:outline-none focus:ring-lime-300 font-medium rounded-lg text-sm px-5 py-2.5">
-                  Se connecter
-                </button>
-              )}
-            </div>
+            <div className="p-4 md:p-6">
+              <div className="mb-4 md:mb-6">
+                <label
+                  htmlFor="student-id"
+                  className="block mb-2 text-sm font-medium text-gray-900"
+                >
+                  Enter your student ID
+                </label>
+                <input
+                  value={etudiantId || ""}
+                  onChange={handleEtudiantChange}
+                  type="number"
+                  id="student-id"
+                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-teal-500 focus:border-teal-500 block w-full p-2.5 transition-all duration-300"
+                  placeholder="Student ID"
+                />
+              </div>
 
+              <div className="text-center">
+                {loading ? (
+                  <button
+                    disabled
+                    className="w-full py-3 px-5 flex items-center justify-center text-black bg-gradient-to-r from-teal-300 to-lime-300 opacity-50 rounded-lg cursor-not-allowed"
+                  >
+                    <svg
+                      className="animate-spin h-5 w-5 mr-3 text-black"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                        fill="none"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      />
+                    </svg>
+                    Verifying...
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleVerification}
+                    className="w-full py-3 px-5 text-black bg-gradient-to-r from-teal-300 to-lime-300 hover:bg-gradient-to-l hover:from-teal-400 hover:to-lime-400 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg"
+                  >
+                    Login
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
         </div>
+        <div className="w-full md:w-1/6"></div>
       </div>
-      <div className="w-1/6"></div>
     </div>
   );
 }

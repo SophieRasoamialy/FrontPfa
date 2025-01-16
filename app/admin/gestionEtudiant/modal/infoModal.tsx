@@ -8,8 +8,15 @@ interface ModalProps {
   id_etudiant: number;
 }
 
+interface Timetable {
+  id_edt: number;
+  date: string;
+  heure: string;
+  matiere: string;
+}
+
 const InfoModal: React.FC<ModalProps> = ({ isOpen, onClose, id_etudiant }) => {
-  const [absentTimetable, setAbsentTimetable] = useState([]);
+  const [absentTimetable, setAbsentTimetable] = useState<Timetable[]>([]);
 
   useEffect(() => {
     if (isOpen) {
@@ -21,7 +28,7 @@ const InfoModal: React.FC<ModalProps> = ({ isOpen, onClose, id_etudiant }) => {
     if(id_etudiant !== 0)
     {
       try {
-        const response = await axios.get(`http://localhost:3001/api/etudiants/etudiants/${id_etudiant}`);
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_BACK_URL}/api/etudiants/etudiants/${id_etudiant}`);
         if (response.status === 200) {
           const data = response.data;
           setAbsentTimetable(data);
