@@ -1,5 +1,6 @@
 # Introduction
 This is the frontend of the i-Presencia application. Here is the link to the application :
+This is the github link of the backend: https://github.com/SophieRasoamialy/backPfa.git
 
 # i-Presencia
 i-Presencia is an innovative application designed to streamline the student attendance process using facial recognition. With FaceCheck, students can mark their presence in class quickly, accurately, and securely, eliminating the need for ID cards or manual signatures. Save time and ensure student attendance with FaceCheck.
