@@ -112,13 +112,13 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ id }) => {
         </div>
       </div>
       <div className='bg-white bg-opacity-70 w-2/3 mx-auto rounded-2xl shadow'>
-        <h3 className="text-center pt-5 font-bold text-base">Votre taux d'Assiduité (en %) en {niveau}</h3>
+        <h3 className="text-center pt-5 font-bold text-base">Votre taux d&apos;Assiduité (en %) en {niveau}</h3>
         <div className='w-1/3 mx-auto p-8'>
           <canvas ref={chartRef} />
         </div>
       </div>
       <div className='bg-white mt-10 p-5 bg-opacity-70 w-2/3 mx-auto rounded-2xl shadow'>
-        <p className="font-normal text-gray-700">Nombre d'absence: <span className="text-teal-700 font-bold">{absence}</span></p>
+        <p className="font-normal text-gray-700">Nombre d&apos;absence: <span className="text-teal-700 font-bold">{absence}</span></p>
         <ul className="list-disc px-5">
           {unattendedCourses.map(course => (
             <li key={course.id_edt}>
