@@ -1,4 +1,4 @@
- 
+ "use client";
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/solid";
