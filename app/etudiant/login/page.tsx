@@ -8,7 +8,7 @@ import axios from "axios";
 import Webcam from "react-webcam";
 import * as faceapi from "face-api.js";
 import Link from "next/link";
-import Image from 'next/image';
+import Image from "next/image";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -91,7 +91,7 @@ export default function LoginPage() {
       setLoading(false);
       setCapturedImage(null);
     }
-   // router.push(`/etudiant/${etudiantId}`);
+    // router.push(`/etudiant/${etudiantId}`);
   };
 
   const drawFaceDetection = async () => {
@@ -118,8 +118,8 @@ export default function LoginPage() {
           return new Promise<HTMLImageElement>((resolve, reject) => {
             const image = new window.Image();
             image.onload = () => resolve(image);
-            image.onerror = reject; 
-            image.src = URL.createObjectURL(blob); 
+            image.onerror = reject;
+            image.src = URL.createObjectURL(blob);
           });
         };
 
@@ -129,46 +129,48 @@ export default function LoginPage() {
           .detectAllFaces(image, new faceapi.TinyFaceDetectorOptions())
           .withFaceLandmarks();
 
-        const canvas = document.getElementById(
-          "faceCanvas"
-        ) as HTMLCanvasElement;
-        const context = canvas.getContext("2d");
+        if (typeof window !== "undefined") {
+          const canvas = document.getElementById(
+            "faceCanvas"
+          ) as HTMLCanvasElement;
+          const context = canvas.getContext("2d");
 
-        if (context) {
-          context.clearRect(0, 0, canvas.width, canvas.height);
+          if (context) {
+            context.clearRect(0, 0, canvas.width, canvas.height);
 
-          detectionsWithLandmarks.forEach((result) => {
-            const { detection, landmarks } = result;
-            const { x, y, width, height } = detection.box;
+            detectionsWithLandmarks.forEach((result) => {
+              const { detection, landmarks } = result;
+              const { x, y, width, height } = detection.box;
 
-            context.strokeStyle = "red";
-            context.lineWidth = 2;
-            context.strokeRect(x, y, width, height);
+              context.strokeStyle = "red";
+              context.lineWidth = 2;
+              context.strokeRect(x, y, width, height);
 
-            landmarks.positions.forEach((point) => {
-              context.fillStyle = "blue";
-              context.fillRect(point.x - 2, point.y - 2, 4, 4);
+              landmarks.positions.forEach((point) => {
+                context.fillStyle = "blue";
+                context.fillRect(point.x - 2, point.y - 2, 4, 4);
+              });
+
+              const leftEye = landmarks.getLeftEye()[0];
+              const rightEye = landmarks.getRightEye()[3];
+              const middleX = (leftEye.x + rightEye.x) / 2;
+              const middleY = (leftEye.y + rightEye.y) / 2;
+
+              context.beginPath();
+              context.ellipse(
+                middleX,
+                middleY,
+                width / 2,
+                height / 2,
+                0,
+                0,
+                2 * Math.PI
+              );
+              context.strokeStyle = "green";
+              context.lineWidth = 2;
+              context.stroke();
             });
-
-            const leftEye = landmarks.getLeftEye()[0];
-            const rightEye = landmarks.getRightEye()[3];
-            const middleX = (leftEye.x + rightEye.x) / 2;
-            const middleY = (leftEye.y + rightEye.y) / 2;
-
-            context.beginPath();
-            context.ellipse(
-              middleX,
-              middleY,
-              width / 2,
-              height / 2,
-              0,
-              0,
-              2 * Math.PI
-            );
-            context.strokeStyle = "green";
-            context.lineWidth = 2;
-            context.stroke();
-          });
+          }
         }
       }
     } catch (error) {
@@ -275,7 +277,7 @@ export default function LoginPage() {
         <div className="w-full md:w-1/6"></div>
         <div className="w-full md:w-2/6 flex h-auto md:h-screen justify-center items-center">
           <div className="w-full max-w-md">
-            <Lottie 
+            <Lottie
               animationData={animationData}
               loop={true}
               autoplay={true}
