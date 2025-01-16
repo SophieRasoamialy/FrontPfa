@@ -91,9 +91,10 @@ const AjoutModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
     setMatiere(event.target.value);
   };
 
-  const handleprofChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleprofChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     setProf(event.target.value);
   };
+  
   if (!isOpen) return null;
 
   return (

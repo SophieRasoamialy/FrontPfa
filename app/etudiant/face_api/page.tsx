@@ -10,10 +10,13 @@ const Compare: NextPage = () => {
   const [error, setError] = useState<string | null>(null);
   const webcamRef = useRef<Webcam>(null);
 const capture = useCallback(async () => {
-  console.log("click0");
   if (webcamRef.current) {
-    console.log(">>>click0");
     const imageSrc = webcamRef.current.getScreenshot();
+
+    if (!imageSrc) {
+      setError('Impossible de capturer une image. Veuillez vérifier la webcam.');
+      return;
+    }
 
     // Charger l'image existante à comparer
     const image1 = await faceapi.fetchImage('images/visaaa.jpg');

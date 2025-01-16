@@ -32,12 +32,12 @@ const EtudiantPage: React.FC<EtudiantPageProps> = ({ params }) => {
 
           <TabPanel>
             <div className="bg-white bg-opacity-90 rounded-2xl shadow-lg p-5">
-              <DashboardPage id={id} />
+              <DashboardPage />
             </div>
           </TabPanel>
           <TabPanel>
             <div className="bg-white bg-opacity-90 rounded-2xl shadow-lg p-5">
-              <EdtPage id={id} />
+              <EdtPage />
             </div>
           </TabPanel>
         </Tabs>

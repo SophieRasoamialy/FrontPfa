@@ -8,7 +8,7 @@ import axios from "axios";
 import Webcam from "react-webcam";
 import * as faceapi from "face-api.js";
 import Link from "next/link";
-import Image from "next/image";
+import Image from 'next/image';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -116,10 +116,10 @@ export default function LoginPage() {
 
         const loadImage = (blob: Blob): Promise<HTMLImageElement> => {
           return new Promise<HTMLImageElement>((resolve, reject) => {
-            const image = new Image();
+            const image = new window.Image();
             image.onload = () => resolve(image);
-            image.onerror = reject;
-            image.src = URL.createObjectURL(blob);
+            image.onerror = reject; 
+            image.src = URL.createObjectURL(blob); 
           });
         };
 

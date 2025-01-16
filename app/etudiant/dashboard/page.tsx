@@ -3,10 +3,7 @@ import 'chart.js/auto';
 import { Chart, registerables, ChartType } from 'chart.js';
 import { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
-
-interface DashboardPageProps {
-  id: string | undefined; // Ou le type approprié de votre ID
-}
+import { useParams } from 'next/navigation';
 
 interface UnattendedCourse {
   id_edt: number;
@@ -16,7 +13,9 @@ interface UnattendedCourse {
   prenom_enseignant: string;
 }
 
-const DashboardPage: React.FC<DashboardPageProps> = ({ id }) => {
+const DashboardPage: React.FC = () => {
+  const params = useParams();
+  const id = params?.id;
   const chartRef = useRef<HTMLCanvasElement | null>(null);
   const chartInstanceRef = useRef<Chart | null>(null);
   const [niveau, setNiveau] = useState('L1');
