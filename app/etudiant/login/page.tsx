@@ -19,7 +19,25 @@ export default function LoginPage() {
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
 
   useEffect(() => {
- 
+    const fetchDataAndDraw = async () => {
+      console.log("Before webcam initialization");
+
+      setTimeout(async () => {
+        if (!webcamRef.current) {
+          console.log("Webcam not initialized");
+          return;
+        }
+        const imageSrc = webcamRef.current.getScreenshot();
+        if (imageSrc) {
+          console.log("Screenshot captured successfully");
+         // await drawFaceDetection();
+        } else {
+          console.log("Image source is null.");
+        }
+      }, 5000);
+    };
+
+    // fetchDataAndDraw();
   }, []);
 
   const handleEtudiantChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -76,6 +94,89 @@ export default function LoginPage() {
     // router.push(`/etudiant/${etudiantId}`);
   };
 
+  const drawFaceDetection = async () => {
+    try {
+      if (webcamRef.current) {
+        const imageSrc = webcamRef.current.getScreenshot();
+
+        if (!imageSrc) {
+          throw new Error("Impossible de capturer l'image");
+        }
+
+        await faceapi.nets.tinyFaceDetector.loadFromUri("/models");
+        await faceapi.nets.faceLandmark68Net.loadFromUri("/models");
+
+        const response = await fetch(imageSrc);
+
+        if (!response.ok) {
+          throw new Error("Échec de la récupération de l'image");
+        }
+
+        const blob = await response.blob();
+
+        const loadImage = (blob: Blob): Promise<HTMLImageElement> => {
+          return new Promise<HTMLImageElement>((resolve, reject) => {
+            const image = new window.Image();
+            image.onload = () => resolve(image);
+            image.onerror = reject;
+            image.src = URL.createObjectURL(blob);
+          });
+        };
+
+        const image = await loadImage(blob);
+
+        const detectionsWithLandmarks = await faceapi
+          .detectAllFaces(image, new faceapi.TinyFaceDetectorOptions())
+          .withFaceLandmarks();
+
+        if (typeof window !== "undefined") {
+          const canvas = document.getElementById(
+            "faceCanvas"
+          ) as HTMLCanvasElement;
+          const context = canvas.getContext("2d");
+
+          if (context) {
+            context.clearRect(0, 0, canvas.width, canvas.height);
+
+            detectionsWithLandmarks.forEach((result) => {
+              const { detection, landmarks } = result;
+              const { x, y, width, height } = detection.box;
+
+              context.strokeStyle = "red";
+              context.lineWidth = 2;
+              context.strokeRect(x, y, width, height);
+
+              landmarks.positions.forEach((point) => {
+                context.fillStyle = "blue";
+                context.fillRect(point.x - 2, point.y - 2, 4, 4);
+              });
+
+              const leftEye = landmarks.getLeftEye()[0];
+              const rightEye = landmarks.getRightEye()[3];
+              const middleX = (leftEye.x + rightEye.x) / 2;
+              const middleY = (leftEye.y + rightEye.y) / 2;
+
+              context.beginPath();
+              context.ellipse(
+                middleX,
+                middleY,
+                width / 2,
+                height / 2,
+                0,
+                0,
+                2 * Math.PI
+              );
+              context.strokeStyle = "green";
+              context.lineWidth = 2;
+              context.stroke();
+            });
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Erreur lors de la détection du visage:", error);
+    }
+  };
 
   const compareFaces = async (): Promise<boolean> => {
     try {
