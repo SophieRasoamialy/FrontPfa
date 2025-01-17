@@ -37,7 +37,7 @@ const ListEtudiant: React.FC = () => {
   const [etudiantId, setEtudiantId] = useState(0);
 
   useEffect(() => {
-    console.log("Fetching niveaux...");
+    console.log("Fetching niveaux...",isAjoutModalOpen);
     fetchNiveaux();
   }, []);
 

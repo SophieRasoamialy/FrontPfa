@@ -98,6 +98,7 @@ const DashboardPage: React.FC = () => {
     try {
       const response = await axios.get(`${process.env.NEXT_PUBLIC_BACK_URL}/api/etudiants/etudiant/${id}/unattended-courses`);
       setUnattendedCourses(response.data);
+      
     } catch (error) {
       console.error('Erreur lors de la récupération des cours non suivis', error);
     }
