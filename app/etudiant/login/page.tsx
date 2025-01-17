@@ -30,7 +30,7 @@ export default function LoginPage() {
         const imageSrc = webcamRef.current.getScreenshot();
         if (imageSrc) {
           console.log("Screenshot captured successfully");
-          await drawFaceDetection();
+         // await drawFaceDetection();
         } else {
           console.log("Image source is null.");
         }
