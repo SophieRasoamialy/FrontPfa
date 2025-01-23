@@ -1,4 +1,3 @@
-'use client';
 import React, { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Lottie from "lottie-react";
@@ -111,19 +110,19 @@ export default function LoginPage() {
         }
         const blob = await fetch(imageSrc as string).then((res) => res.blob());
         const image2 = await faceapi.bufferToImage(blob);
-        await faceapi.nets.tinyFaceDetector.loadFromUri("/models");
-        await faceapi.nets.faceLandmark68Net.loadFromUri("/models");
-        await faceapi.nets.faceRecognitionNet.loadFromUri("/models");
-        await faceapi.nets.ssdMobilenetv1.loadFromUri("/models");
 
-        const face2 = await faceapi
-          .detectSingleFace(image2)
-          .withFaceLandmarks()
-          .withFaceDescriptor();
-        const face1 = await faceapi
-          .detectSingleFace(image1)
-          .withFaceLandmarks()
-          .withFaceDescriptor();
+        await Promise.all([
+          faceapi.nets.tinyFaceDetector.loadFromUri('/models'),
+          faceapi.nets.faceLandmark68Net.loadFromUri('/models'),
+          faceapi.nets.faceRecognitionNet.loadFromUri('/models'),
+          faceapi.nets.ssdMobilenetv1.loadFromUri('/models')
+        ]);
+
+       
+          const [face1, face2] = await Promise.all([
+            faceapi.detectSingleFace(image1).withFaceLandmarks().withFaceDescriptor(),
+            faceapi.detectSingleFace(image2).withFaceLandmarks().withFaceDescriptor()
+          ]);
 
         const distance = faceapi.euclideanDistance(
           face1!.descriptor,
