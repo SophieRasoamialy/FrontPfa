@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Lottie from "lottie-react";
+import dynamic from 'next/dynamic';
 import animationData from "../../../public/lotties/facial.json";
 import Swal from "sweetalert2";
 import axios from "axios";
@@ -9,8 +9,8 @@ import Webcam from "react-webcam";
 import * as faceapi from "face-api.js";
 import Link from "next/link";
 import Image from "next/image";
-export const dynamic = "force-dynamic"; 
 
+const Lottie = dynamic(() => import('lottie-react'), { ssr: false });
 
 export default function LoginPage() {
   const router = useRouter();
@@ -20,9 +20,6 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
 
-  useEffect(() => {
-   
-  }, []);
 
   const handleEtudiantChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value;
@@ -44,7 +41,9 @@ export default function LoginPage() {
       const data = response.data;
 
       if (response.status === 200 && data.exists) {
-        const faceMatch = await compareFaces();
+
+        let faceMatch ;
+        if (typeof window !== "undefined"){ faceMatch = await compareFaces();}
 
         if (faceMatch) {
           console.log("La vérification a réussi. Redirection en cours...");
@@ -77,8 +76,6 @@ export default function LoginPage() {
     }
     // router.push(`/etudiant/${etudiantId}`);
   };
-
-
 
   const compareFaces = async (): Promise<boolean> => {
     try {
