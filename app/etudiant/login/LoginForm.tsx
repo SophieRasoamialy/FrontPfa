@@ -9,6 +9,7 @@ import Webcam from "react-webcam";
 import * as faceapi from "face-api.js";
 import Link from "next/link";
 import Image from "next/image";
+export const dynamic = "force-dynamic"; 
 
 
 export default function LoginPage() {
@@ -113,12 +114,12 @@ export default function LoginPage() {
         const blob = await fetch(imageSrc as string).then((res) => res.blob());
         const image2 = await faceapi.bufferToImage(blob);
 
-        await Promise.all([
+        if (typeof window !== "undefined"){ await Promise.all([
           faceapi.nets.tinyFaceDetector.loadFromUri('/models'),
           faceapi.nets.faceLandmark68Net.loadFromUri('/models'),
           faceapi.nets.faceRecognitionNet.loadFromUri('/models'),
           faceapi.nets.ssdMobilenetv1.loadFromUri('/models')
-        ]);
+        ]);}
 
        
           const [face1, face2] = await Promise.all([
@@ -148,6 +149,12 @@ export default function LoginPage() {
 
     return false;
   };
+
+  const WebcamComponent = () => {
+    if (typeof window === "undefined") return null; // Rendu côté serveur : ne rien afficher
+    return <Webcam audio={false} ref={webcamRef} className="w-full h-full object-cover rounded-t-2xl" screenshotFormat="image/jpeg" />;
+  };
+  
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-teal-100 to-white">
@@ -202,12 +209,7 @@ export default function LoginPage() {
                   />
                 ) : (
                   <div className="relative w-full h-[300px] md:h-[400px]">
-                    <Webcam
-                      audio={false}
-                      ref={webcamRef}
-                      className="w-full h-full object-cover rounded-t-2xl"
-                      screenshotFormat="image/jpeg"
-                    />
+                   <WebcamComponent />
                     <canvas
                       id="faceCanvas"
                       className="absolute top-0 left-0 w-full h-full"
