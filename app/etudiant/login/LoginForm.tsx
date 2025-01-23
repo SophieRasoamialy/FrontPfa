@@ -1,3 +1,4 @@
+'use client';
 import React, { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Lottie from "lottie-react";
@@ -8,6 +9,7 @@ import Webcam from "react-webcam";
 import * as faceapi from "face-api.js";
 import Link from "next/link";
 import Image from "next/image";
+
 
 export default function LoginPage() {
   const router = useRouter();
